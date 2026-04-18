@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>匹茲堡睡眠品質量表 PSQI | Pittsburgh Sleep Quality Index</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Microsoft JhengHei','Noto Sans TC',sans-serif;background:#f0f4f8;color:#2d3748;line-height:1.6}
+
+    /* === HEADER === */
+    .hdr{background:linear-gradient(135deg,#1a202c 0%,#2d3748 50%,#4a5568 100%);color:#fff;padding:52px 24px 44px;text-align:center}
+    .hdr-ico{font-size:56px;margin-bottom:16px}
+    .hdr h1{font-size:1.9rem;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
+    .hdr h2{font-size:.95rem;font-weight:400;opacity:.8;margin-bottom:16px;letter-spacing:1px}
+    .hdr-desc{max-width:640px;margin:0 auto;background:rgba(255,255,255,.12);border-radius:12px;padding:14px 20px;font-size:.86rem;line-height:1.7;opacity:.93}
+
+    /* === LAYOUT === */
+    .wrap{max-width:860px;margin:0 auto;padding:28px 16px 60px}
+
+    /* === DISCLAIMER === */
+    .disc{background:#fffbeb;border-left:4px solid #f59e0b;border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:.84rem;color:#78350f}
+    .disc strong{color:#92400e}
+
+    /* === SECTION CARD === */
+    .sec{background:#fff;border-radius:16px;padding:26px 26px 18px;margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+    .sechd{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #f0f4f8}
+    .secico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+    .secinfo h3{font-size:1rem;font-weight:700;color:#1a365d}
+    .secinfo p{font-size:.77rem;color:#718096;margin-top:1px}
+
+    /* === Q1-Q4 INPUT ROWS === */
+    .qrow{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid #f0f4f8;flex-wrap:wrap}
+    .qrow:last-child{border-bottom:none}
+    .qlabel{flex:1;min-width:200px}
+    .qzh{font-size:.91rem;font-weight:500;color:#2d3748}
+    .qen{font-size:.77rem;color:#a0aec0;margin-top:3px}
+    .qinput{background:#f7fafc;border:2px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:.92rem;color:#2d3748;outline:none;transition:border-color .2s}
+    .qinput:focus{border-color:#4299e1;background:#fff}
+    .qunit{font-size:.82rem;color:#718096;align-self:center;white-space:nowrap}
+
+    /* === Q5 FREQUENCY GRID === */
+    .rgrid-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .rgrid{width:100%;border-collapse:collapse;margin-top:6px;font-size:.82rem;min-width:480px}
+    .rgrid th{background:#f7fafc;color:#4a5568;font-weight:600;padding:9px 8px;text-align:center;border:1px solid #e2e8f0;font-size:.75rem;line-height:1.35}
+    .rgrid th:first-child{text-align:left;width:44%}
+    .rgrid td{border:1px solid #e2e8f0;padding:9px 8px;vertical-align:middle}
+    .rgrid td:first-child{font-size:.84rem;font-weight:500;color:#2d3748;line-height:1.45}
+    .rgrid td:not(:first-child){text-align:center}
+    .rgrid tr:nth-child(even){background:#fafafa}
+    .rgrid tr:hover{background:#f0f9ff}
+    .rgrid input[type=radio]{accent-color:#4299e1;width:17px;height:17px;cursor:pointer}
+
+    /* === Q6-Q9 RADIO OPTION PILLS === */
+    .rrow{display:flex;flex-wrap:wrap;gap:10px;padding:14px 0;border-bottom:1px solid #f0f4f8;align-items:flex-start}
+    .rrow:last-child{border-bottom:none}
+    .rlabel{flex:1;min-width:220px}
+    .ropts{display:flex;flex-wrap:wrap;gap:7px;align-self:center}
+    .ropt{display:flex;align-items:center;gap:6px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:7px 13px;cursor:pointer;transition:all .15s;font-size:.81rem;font-weight:500;color:#4a5568;white-space:nowrap}
+    .ropt:hover{background:#ebf8ff;border-color:#90cdf4}
+    .ropt input[type=radio]{accent-color:#4299e1;margin:0;width:14px;height:14px;cursor:pointer;flex-shrink:0}
+    .ropt.sel{background:#ebf8ff;border-color:#4299e1;color:#2b6cb0;font-weight:600}
+
+    /* === SUBMIT === */
+    .subwrap{text-align:center;margin:36px 0 8px}
+    .subbtn{background:linear-gradient(135deg,#2d3748,#4a5568);color:#fff;border:none;padding:17px 56px;font-size:1rem;font-weight:700;border-radius:50px;cursor:pointer;box-shadow:0 4px 18px rgba(45,55,72,.4);transition:all .2s;letter-spacing:.5px}
+    .subbtn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(45,55,72,.5)}
+    .errmsg{color:#e53e3e;font-size:.82rem;margin-top:10px;display:none;font-weight:500}
+
+    /* === RESULTS === */
+    #res{display:none;animation:fi .5s ease}
+    @keyframes fi{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+    .rbanner{text-align:center;padding:46px 24px 38px;border-radius:16px;margin-bottom:22px;color:#fff}
+    .rbanner.good{background:linear-gradient(135deg,#1c4532,#276749,#38a169,#68d391)}
+    .rbanner.poor-mild{background:linear-gradient(135deg,#744210,#b7791f,#d69e2e,#f6e05e);color:#1a1a00}
+    .rbanner.poor-mod{background:linear-gradient(135deg,#7b341e,#c05621,#dd6b20,#ed8936)}
+    .rbanner.poor-sev{background:linear-gradient(135deg,#63171b,#c53030,#e53e3e,#fc8181)}
+    .rtotalnum{font-size:4rem;font-weight:900;line-height:1;margin-bottom:6px}
+    .rtotallbl{font-size:.88rem;opacity:.75;margin-bottom:14px}
+    .rlevel{font-size:1.35rem;font-weight:800;margin-bottom:6px}
+    .rdesc{font-size:.9rem;opacity:.88;max-width:480px;margin:0 auto}
+    .rchips{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+    .rchip{background:rgba(255,255,255,.2);border-radius:50px;padding:6px 18px;font-size:.83rem;font-weight:600}
+
+    /* === 7 COMPONENTS === */
+    .compbox{background:#fff;border-radius:16px;padding:28px;margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+    .compbox h3{font-size:1rem;font-weight:700;color:#1a365d;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #f0f4f8}
+    .comprow{display:flex;align-items:center;gap:13px;margin-bottom:13px;flex-wrap:wrap}    .compname{flex:0 0 175px;min-width:140px}
+    .compnzh{font-size:.84rem;font-weight:700;color:#2d3748}
+    .compnen{font-size:.71rem;color:#a0aec0;margin-top:1px}
+    .compbar{flex:1;min-width:80px;height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden}
+    .compfill{height:100%;border-radius:5px;transition:width .7s ease}
+    .compscore{width:28px;text-align:right;font-weight:900;font-size:.95rem}
+    .compnote{font-size:.73rem;color:#a0aec0;margin-top:16px;text-align:right;line-height:1.5}
+
+    /* === CHART === */
+    .chartbox{background:#fff;border-radius:16px;padding:28px;margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+    .chartbox h3{font-size:1rem;font-weight:700;color:#1a365d;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #f0f4f8}
+
+    /* === FIN === */
+    .fin{background:linear-gradient(135deg,#ebf8ff,#e0f2fe);border-radius:16px;padding:28px;text-align:center;margin-bottom:28px}
+    .fin h4{color:#1a365d;font-size:1rem;font-weight:700;margin-bottom:10px}
+    .fin p{color:#2c5282;font-size:.83rem;line-height:1.8}
+
+    .rstwrap{text-align:center;margin-bottom:20px}
+    .rstbtn{background:#fff;color:#2d3748;border:2px solid #2d3748;padding:12px 38px;font-size:.9rem;font-weight:600;border-radius:50px;cursor:pointer;transition:all .2s}
+    .rstbtn:hover{background:#2d3748;color:#fff}
+
+    /* === RESPONSIVE === */
+    @media(max-width:600px){
+      .hdr h1{font-size:1.4rem}
+      .sec{padding:18px 14px 12px}
+      .compname{flex:0 0 130px;min-width:120px}
+      .compnzh{font-size:.78rem}
+    }
+    @media(max-width:420px){
+      .ropts{flex-direction:column;width:100%}
+      .ropt{justify-content:flex-start}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="hdr">
+  <div class="hdr-ico">🌙</div>
+  <h1>匹茲堡睡眠品質量表</h1>
+  <h2>Pittsburgh Sleep Quality Index (PSQI) &nbsp;·&nbsp; 9 Questions &nbsp;·&nbsp; v1.0</h2>
+  <div class="hdr-desc">
+    評估您<strong>過去一個月</strong>的睡眠習慣與品質，計算七項睡眠向度得分。<br>
+    <small>Assess your sleep habits over the past month across 7 sleep quality components.</small>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- 說明 -->
+  <div class="disc">
+    ⚠️ <strong>填寫說明：</strong>以下問題調查您<strong>過去一個月來的睡眠習慣</strong>，請以<strong>平均狀況</strong>回答，所有題目皆須填寫才可計算結果。<br>
+    <em>Instructions: Answer based on your usual sleep habits during the past month. All questions must be completed.</em>
+  </div>
+
+  <form id="mf">
+
+    <!-- ===== SECTION A: Q1–Q4 基本睡眠資訊 ===== -->
+    <div class="sec">
+      <div class="sechd">
+        <div class="secico" style="background:#f0fff4">🛏️</div>
+        <div class="secinfo">
+          <h3>第一部分：基本睡眠資訊</h3>
+          <p>Section A — Basic Sleep Information (Q1–Q4)</p>
+        </div>
+      </div>
+
+      <div class="qrow">
+        <div class="qlabel">
+          <div class="qzh">1. 過去一個月，您晚上通常幾點上床睡覺？</div>
+          <div class="qen">During the past month, when have you usually gone to bed at night?</div>
+        </div>
+        <input type="time" id="q1" class="qinput" style="width:130px" required>
+      </div>
+
+      <div class="qrow">
+        <div class="qlabel">
+          <div class="qzh">2. 過去一個月，您在上床後，通常躺多久才能入睡？</div>
+          <div class="qen">How long (in minutes) has it usually taken you to fall asleep each night?</div>
+        </div>
+        <input type="number" id="q2" class="qinput" min="0" max="300" placeholder="例：20" style="width:90px" required>
+        <span class="qunit">分鐘 / min</span>
+      </div>
+
+      <div class="qrow">
+        <div class="qlabel">
+          <div class="qzh">3. 過去一個月，您早上通常幾點起床？</div>
+          <div class="qen">During the past month, when have you usually gotten up in the morning?</div>
+        </div>
+        <input type="time" id="q3" class="qinput" style="width:130px" required>      </div>
+
+      <div class="qrow">
+        <div class="qlabel">
+          <div class="qzh">4. 過去一個月，您每天晚上真正睡著的時間約多少？（這可能和您躺在床上所花的時間不同）</div>
+          <div class="qen">How many hours of actual sleep did you get at night? (May differ from time spent in bed.)</div>
+        </div>
+        <input type="number" id="q4" class="qinput" min="0" max="24" step="0.5" placeholder="例：6.5" style="width:90px" required>
+        <span class="qunit">小時 / hrs</span>
+      </div>
+    </div>
+
+    <!-- ===== SECTION B: Q5 睡眠困擾頻率 ===== -->
+    <div class="sec">
+      <div class="sechd">
+        <div class="secico" style="background:#fff5f5">😴</div>
+        <div class="secinfo">
+          <h3>第二部分：睡眠困擾頻率</h3>
+          <p>Section B — Sleep Disturbances (Q5a–j)</p>
+        </div>
+      </div>
+
+      <p style="font-size:.86rem;color:#4a5568;margin-bottom:14px;line-height:1.6">
+        5. 過去一個月，您的睡眠有多少次受到下列干擾？請在最適合您的選項內打勾，<strong>所有子題皆須作答</strong>。<br>
+        <span style="color:#a0aec0;font-size:.78rem">During the past month, how often have you had trouble sleeping because you…</span>
+      </p>
+
+      <div class="rgrid-wrap">
+        <table class="rgrid">
+          <thead>
+            <tr>
+              <th>干擾原因 / Reason</th>
+              <th>從未發生<br>Never</th>
+              <th>每週少於1次<br>&lt;1/wk</th>
+              <th>每週1–2次<br>1–2/wk</th>
+              <th>每週3次或以上<br>≥3/wk</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>a. 無法在 30 分鐘內入睡<br><small style="color:#a0aec0">Cannot get to sleep within 30 min</small></td>
+              <td><input type="radio" name="q5a" value="0" required></td>
+              <td><input type="radio" name="q5a" value="1"></td>
+              <td><input type="radio" name="q5a" value="2"></td>
+              <td><input type="radio" name="q5a" value="3"></td>
+            </tr>
+            <tr>
+              <td>b. 半夜或清晨醒來<br><small style="color:#a0aec0">Wake up in the night or early morning</small></td>
+              <td><input type="radio" name="q5b" value="0" required></td>
+              <td><input type="radio" name="q5b" value="1"></td>
+              <td><input type="radio" name="q5b" value="2"></td>
+              <td><input type="radio" name="q5b" value="3"></td>
+            </tr>
+            <tr>
+              <td>c. 需要起床上廁所<br><small style="color:#a0aec0">Have to get up to use the bathroom</small></td>
+              <td><input type="radio" name="q5c" value="0" required></td>
+              <td><input type="radio" name="q5c" value="1"></td>
+              <td><input type="radio" name="q5c" value="2"></td>
+              <td><input type="radio" name="q5c" value="3"></td>
+            </tr>
+            <tr>
+              <td>d. 呼吸不順暢<br><small style="color:#a0aec0">Cannot breathe comfortably</small></td>
+              <td><input type="radio" name="q5d" value="0" required></td>
+              <td><input type="radio" name="q5d" value="1"></td>
+              <td><input type="radio" name="q5d" value="2"></td>
+              <td><input type="radio" name="q5d" value="3"></td>
+            </tr>
+            <tr>
+              <td>e. 咳嗽或大聲打鼾<br><small style="color:#a0aec0">Cough or snore loudly</small></td>
+              <td><input type="radio" name="q5e" value="0" required></td>
+              <td><input type="radio" name="q5e" value="1"></td>
+              <td><input type="radio" name="q5e" value="2"></td>
+              <td><input type="radio" name="q5e" value="3"></td>
+            </tr>
+            <tr>
+              <td>f. 感覺很冷<br><small style="color:#a0aec0">Feel too cold</small></td>
+              <td><input type="radio" name="q5f" value="0" required></td>
+              <td><input type="radio" name="q5f" value="1"></td>
+              <td><input type="radio" name="q5f" value="2"></td>
+              <td><input type="radio" name="q5f" value="3"></td>
+            </tr>
+            <tr>
+              <td>g. 感覺很熱<br><small style="color:#a0aec0">Feel too hot</small></td>
+              <td><input type="radio" name="q5g" value="0" required></td>
+              <td><input type="radio" name="q5g" value="1"></td>
+              <td><input type="radio" name="q5g" value="2"></td>
+              <td><input type="radio" name="q5g" value="3"></td>
+            </tr>
+            <tr>
+              <td>h. 作惡夢<br><small style="color:#a0aec0">Have bad dreams</small></td>              <td><input type="radio" name="q5h" value="0" required></td>
+              <td><input type="radio" name="q5h" value="1"></td>
+              <td><input type="radio" name="q5h" value="2"></td>
+              <td><input type="radio" name="q5h" value="3"></td>
+            </tr>
+            <tr>
+              <td>i. 疼痛<br><small style="color:#a0aec0">Have pain</small></td>
+              <td><input type="radio" name="q5i" value="0" required></td>
+              <td><input type="radio" name="q5i" value="1"></td>
+              <td><input type="radio" name="q5i" value="2"></td>
+              <td><input type="radio" name="q5i" value="3"></td>
+            </tr>
+            <tr>
+              <td>
+                j. 其他情況，請說明：
+                <input type="text" id="q5j_txt" class="qinput" placeholder="描述..." style="width:110px;padding:4px 8px;font-size:.78rem;margin-left:4px"><br>
+                <small style="color:#a0aec0">Other reason (describe above)</small>
+              </td>
+              <td><input type="radio" name="q5j" value="0" required></td>
+              <td><input type="radio" name="q5j" value="1"></td>
+              <td><input type="radio" name="q5j" value="2"></td>
+              <td><input type="radio" name="q5j" value="3"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== SECTION C: Q6–Q9 其他問題 ===== -->
+    <div class="sec">
+      <div class="sechd">
+        <div class="secico" style="background:#faf5ff">💊</div>
+        <div class="secinfo">
+          <h3>第三部分：藥物使用與日間功能</h3>
+          <p>Section C — Medication Use &amp; Daytime Function (Q6–Q9)</p>
+        </div>
+      </div>
+
+      <!-- Q6 -->
+      <div class="rrow">
+        <div class="rlabel">
+          <div class="qzh">6. 過去一個月，您有多少次需要藉助藥物（醫師處方或成藥）來幫助睡眠？</div>
+          <div class="qen">How often have you taken medicine (prescribed or over the counter) to help you sleep?</div>
+        </div>
+        <div class="ropts" id="ropts_q6">
+          <label class="ropt"><input type="radio" name="q6" value="0" onchange="selRopt('q6')" required>從未<br><small>Never</small></label>
+          <label class="ropt"><input type="radio" name="q6" value="1" onchange="selRopt('q6')">每週&lt;1次<br><small>&lt;1/wk</small></label>
+          <label class="ropt"><input type="radio" name="q6" value="2" onchange="selRopt('q6')">每週1–2次<br><small>1–2/wk</small></label>
+          <label class="ropt"><input type="radio" name="q6" value="3" onchange="selRopt('q6')">每週≥3次<br><small>≥3/wk</small></label>
+        </div>
+      </div>
+
+      <!-- Q7 -->
+      <div class="rrow">
+        <div class="rlabel">
+          <div class="qzh">7. 過去一個月，當您在開車、用餐、從事日常社交活動時，有多少次覺得難以保持清醒狀態？</div>
+          <div class="qen">How often have you had trouble staying awake while driving, eating meals, or engaging in social activity?</div>
+        </div>
+        <div class="ropts" id="ropts_q7">
+          <label class="ropt"><input type="radio" name="q7" value="0" onchange="selRopt('q7')" required>從未<br><small>Never</small></label>
+          <label class="ropt"><input type="radio" name="q7" value="1" onchange="selRopt('q7')">每週&lt;1次<br><small>&lt;1/wk</small></label>
+          <label class="ropt"><input type="radio" name="q7" value="2" onchange="selRopt('q7')">每週1–2次<br><small>1–2/wk</small></label>
+          <label class="ropt"><input type="radio" name="q7" value="3" onchange="selRopt('q7')">每週≥3次<br><small>≥3/wk</small></label>
+        </div>
+      </div>
+
+      <!-- Q8 -->
+      <div class="rrow">
+        <div class="rlabel">
+          <div class="qzh">8. 過去一個月，要打起精神來完成您應該做的事情，對您有多少困擾？</div>
+          <div class="qen">How much of a problem has it been for you to keep up enough enthusiasm to get things done?</div>
+        </div>
+        <div class="ropts" id="ropts_q8">
+          <label class="ropt"><input type="radio" name="q8" value="0" onchange="selRopt('q8')" required>完全沒有<br><small>No problem</small></label>
+          <label class="ropt"><input type="radio" name="q8" value="1" onchange="selRopt('q8')">只有很少<br><small>Slight</small></label>
+          <label class="ropt"><input type="radio" name="q8" value="2" onchange="selRopt('q8')">有些困擾<br><small>Somewhat</small></label>
+          <label class="ropt"><input type="radio" name="q8" value="3" onchange="selRopt('q8')">很大困擾<br><small>Very big</small></label>
+        </div>
+      </div>
+
+      <!-- Q9 -->
+      <div class="rrow">
+        <div class="rlabel">
+          <div class="qzh">9. 過去一個月，您對自己的睡眠品質整體評價如何？</div>
+          <div class="qen">During the past month, how would you rate your sleep quality overall?</div>
+        </div>
+        <div class="ropts" id="ropts_q9">
+          <label class="ropt"><input type="radio" name="q9" value="0" onchange="selRopt('q9')" required>非常好<br><small>Very good</small></label>
+          <label class="ropt"><input type="radio" name="q9" value="1" onchange="selRopt('q9')">好<br><small>Fairly good</small></label>
+          <label class="ropt"><input type="radio" name="q9" value="2" onchange="selRopt('q9')">不好<br><small>Fairly bad</small></label>          <label class="ropt"><input type="radio" name="q9" value="3" onchange="selRopt('q9')">非常不好<br><small>Very bad</small></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="subwrap">
+      <button type="button" class="subbtn" onclick="calc()">
+        🌙 計算睡眠品質分數 &nbsp;|&nbsp; Calculate My Sleep Score
+      </button>
+      <div class="errmsg" id="errmsg">
+        ⚠️ 請完整填寫所有題目（包含所有子題）後再計算。<br>
+        <span style="font-size:.78rem">Please complete all questions before calculating.</span>
+      </div>
+    </div>
+  </form>
+
+  <!-- ===== RESULTS ===== -->
+  <div id="res">
+
+    <!-- Score banner -->
+    <div class="rbanner" id="rbanner">
+      <div class="rtotalnum" id="rtotalnum">—</div>
+      <div class="rtotallbl">PSQI 總分 / Total Score (0–21)</div>
+      <div class="rlevel" id="rlevel">—</div>
+      <div class="rdesc" id="rdesc">—</div>
+      <div class="rchips">
+        <span class="rchip" id="chip_eff">—</span>
+        <span class="rchip" id="chip_dur">—</span>
+        <span class="rchip" id="chip_lat">—</span>
+      </div>
+    </div>
+
+    <!-- 7 Component Scores -->
+    <div class="compbox">
+      <h3>📊 七個睡眠向度分析 | 7 Sleep Component Scores</h3>
+      <div id="complist"></div>
+      <p class="compnote">
+        各向度 0–3 分（0 = 無問題，3 = 嚴重問題）；總分 0–21 分，<strong>&gt;5 分表示睡眠品質差</strong><br>
+        Each component 0–3 (0=no difficulty, 3=severe difficulty); total &gt;5 = poor sleep quality
+      </p>
+    </div>
+
+    <!-- Radar Chart -->
+    <div class="chartbox">
+      <h3>📈 睡眠向度雷達圖 | Sleep Component Radar</h3>
+      <div style="max-width:420px;margin:0 auto">
+        <canvas id="pc"></canvas>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="fin">
+      <h4>🩺 重要提醒 | Important Reminder</h4>
+      <p>
+        本量表（PSQI）為標準化<strong>睡眠品質篩查工具</strong>，不能取代臨床診斷。<br>
+        若總分 &gt; 5 分，建議諮詢<strong>睡眠醫學科、身心科或神經科</strong>醫師進行進一步評估。<br><br>
+        <em>The PSQI is a standardized screening instrument and does not constitute a clinical diagnosis.<br>
+        A total score &gt;5 suggests poor sleep quality; please consult a physician for formal evaluation.</em><br><br>
+        <small style="opacity:.7">Buysse DJ et al. (1989). The Pittsburgh Sleep Quality Index. <em>Psychiatry Research, 28</em>(2), 193–213.</small>
+      </p>
+    </div>
+
+    <div class="rstwrap">
+      <button class="rstbtn" onclick="rst()">↩ 重新填寫 &nbsp;|&nbsp; Restart</button>
+    </div>
+  </div><!-- #res -->
+
+</div><!-- .wrap -->
+
+<script>
+// ===================================================
+//  PSQI Scoring Engine
+// ===================================================
+
+function getRadio(name) {
+  const el = document.querySelector('input[name="' + name + '"]:checked');
+  return el ? parseInt(el.value) : null;
+}
+
+function validate() {
+  const q1 = document.getElementById('q1').value;
+  const q2 = document.getElementById('q2').value;
+  const q3 = document.getElementById('q3').value;
+  const q4 = document.getElementById('q4').value;
+  if (!q1 || q2 === '' || !q3 || q4 === '') return false;
+  const radios = ['q5a','q5b','q5c','q5d','q5e','q5f','q5g','q5h','q5i','q5j','q6','q7','q8','q9'];
+  for (const n of radios) {
+    if (getRadio(n) === null) return false;
+  }
+  return true;}
+
+function selRopt(qname) {
+  const container = document.getElementById('ropts_' + qname);
+  if (!container) return;
+  container.querySelectorAll('.ropt').forEach(el => {
+    const r = el.querySelector('input[type=radio]');
+    el.classList.toggle('sel', r && r.checked);
+  });
+}
+
+function timeToMin(t) {
+  if (!t) return 0;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+let chartInst = null;
+
+function calc() {
+  if (!validate()) {
+    document.getElementById('errmsg').style.display = 'block';
+    return;
+  }
+  document.getElementById('errmsg').style.display = 'none';
+
+  // ---- Raw values ----
+  const q1val  = document.getElementById('q1').value;
+  const q2val  = parseFloat(document.getElementById('q2').value);
+  const q3val  = document.getElementById('q3').value;
+  const q4val  = parseFloat(document.getElementById('q4').value);
+  const q5a = getRadio('q5a'), q5b = getRadio('q5b'), q5c = getRadio('q5c');
+  const q5d = getRadio('q5d'), q5e = getRadio('q5e'), q5f = getRadio('q5f');
+  const q5g = getRadio('q5g'), q5h = getRadio('q5h'), q5i = getRadio('q5i');
+  const q5j = getRadio('q5j');
+  const q6 = getRadio('q6'), q7 = getRadio('q7'), q8 = getRadio('q8'), q9 = getRadio('q9');
+
+  // ---- C1: Subjective Sleep Quality (Q9) ----
+  const c1 = q9;
+
+  // ---- C2: Sleep Latency ----
+  let q2s = q2val <= 15 ? 0 : q2val <= 30 ? 1 : q2val <= 60 ? 2 : 3;
+  const c2sum = q2s + q5a;
+  const c2 = c2sum === 0 ? 0 : c2sum <= 2 ? 1 : c2sum <= 4 ? 2 : 3;
+
+  // ---- C3: Sleep Duration (Q4) ----
+  const c3 = q4val > 7 ? 0 : q4val >= 6 ? 1 : q4val >= 5 ? 2 : 3;
+
+  // ---- C4: Habitual Sleep Efficiency ----
+  let bedMin  = timeToMin(q1val);
+  let wakeMin = timeToMin(q3val);
+  if (wakeMin <= bedMin) wakeMin += 24 * 60;          // overnight
+  const tib = (wakeMin - bedMin) / 60;                // time in bed (hours)
+  const eff = tib > 0 ? (q4val / tib) * 100 : 0;
+  const c4 = eff > 85 ? 0 : eff >= 75 ? 1 : eff >= 65 ? 2 : 3;
+
+  // ---- C5: Sleep Disturbances (Q5b–j) ----
+  const c5sum = q5b + q5c + q5d + q5e + q5f + q5g + q5h + q5i + q5j;
+  const c5 = c5sum === 0 ? 0 : c5sum <= 9 ? 1 : c5sum <= 18 ? 2 : 3;
+
+  // ---- C6: Sleep Medication (Q6) ----
+  const c6 = q6;
+
+  // ---- C7: Daytime Dysfunction (Q7 + Q8) ----
+  const c7sum = q7 + q8;
+  const c7 = c7sum === 0 ? 0 : c7sum <= 2 ? 1 : c7sum <= 4 ? 2 : 3;
+
+  // ---- Total ----
+  const total = c1 + c2 + c3 + c4 + c5 + c6 + c7;
+
+  // ---- Banner ----
+  const banner = document.getElementById('rbanner');
+  let bannerClass, levelZh, levelEn, descZh, descEn;
+  if (total <= 5) {
+    bannerClass = 'good';
+    levelZh = '\u7761\u7720\u54c1\u8cea\u826f\u597d \u2713';
+    levelEn = 'Good Sleeper';
+    descZh  = '\u60a8\u7684\u7761\u7720\u54c1\u8cea\u5728\u6b63\u5e38\u7bc4\u570d\u5167\uff0c\u7e7c\u7e8c\u4fdd\u6301\u826f\u597d\u7684\u7761\u7720\u8853\u751f\u3002';
+  } else if (total <= 10) {
+    bannerClass = 'poor-mild';
+    levelZh = '\u8f15\u5ea6\u7761\u7720\u554f\u984c';
+    levelEn = 'Mild Sleep Difficulties';
+    descZh  = '\u5efa\u8b70\u6ce8\u610f\u7761\u7720\u885b\u751f\uff0c\u5fc5\u8981\u6642\u8acb\u8acb\u76ca\u7761\u7720\u919b\u8853\u6216\u8eab\u5fc3\u79d1\u91ab\u5e2b\u8a55\u4f30\u3002';
+  } else if (total <= 15) {
+    bannerClass = 'poor-mod';
+    levelZh = '\u4e2d\u5ea6\u7761\u7720\u554f\u984c';
+    levelEn = 'Moderate Sleep Difficulties';
+    descZh  = '\u7761\u7720\u54c1\u8cea\u986f\u8457\u53d7\u640d\uff0c\u5efa\u8b70\u5c31\u8a3a\u8a55\u4f30\u6cbb\u7642\u3002';
+  } else {
+    bannerClass = 'poor-sev';    levelZh = '\u91cd\u5ea6\u7761\u7720\u554f\u984c';
+    levelEn = 'Severe Sleep Difficulties';
+    descZh  = '\u7761\u7720\u54c1\u8cea\u56b4\u91cd\u53d7\u640d\uff0c\u5f37\u70c8\u5efa\u8b70\u5c0b\u6c42\u7761\u7720\u5c08\u79d1\u9032\u884c\u5c08\u696d\u8a55\u4f30\u3002';
+  }
+  banner.className = 'rbanner ' + bannerClass;
+  document.getElementById('rtotalnum').textContent = total + ' / 21';
+  document.getElementById('rlevel').textContent = levelZh + '  ·  ' + levelEn;
+  document.getElementById('rdesc').textContent = descZh;
+  document.getElementById('chip_eff').textContent = '\uD83D\uDCA4 \u7761\u7720\u6548\u7387 ' + Math.round(eff) + '%';
+  document.getElementById('chip_dur').textContent = '\u23F0 \u5be6\u969b\u7761\u7720 ' + q4val + ' \u5c0f\u6642';
+  document.getElementById('chip_lat').textContent = '\u23F3 \u5165\u7761\u6642\u9593 ' + q2val + ' \u5206\u9418';
+
+  // ---- Component list ----
+  const comps = [
+    { zh: 'C1 \u4e3b\u89c0\u7761\u7720\u54c1\u8cea', en: 'Subjective Sleep Quality',    score: c1 },
+    { zh: 'C2 \u5165\u7761\u6642\u9593',               en: 'Sleep Latency',               score: c2 },
+    { zh: 'C3 \u7761\u7720\u6642\u6578',               en: 'Sleep Duration',              score: c3 },
+    { zh: 'C4 \u7761\u7720\u6548\u7387',               en: 'Habitual Sleep Efficiency',   score: c4 },
+    { zh: 'C5 \u7761\u7720\u56f0\u64fe',               en: 'Sleep Disturbances',          score: c5 },
+    { zh: 'C6 \u5b89\u7720\u85e5\u7269\u4f7f\u7528',   en: 'Use of Sleep Medication',     score: c6 },
+    { zh: 'C7 \u65e5\u9593\u529f\u80fd\u969c\u7919',   en: 'Daytime Dysfunction',         score: c7 },
+  ];
+  const cColors = ['#48bb78','#68d391','#f6ad55','#fc8181'];
+  document.getElementById('complist').innerHTML = comps.map(c => `
+    <div class="comprow">
+      <div class="compname">
+        <div class="compnzh">${c.zh}</div>
+        <div class="compnen">${c.en}</div>
+      </div>
+      <div class="compbar">
+        <div class="compfill" style="width:${c.score / 3 * 100}%;background:${cColors[c.score]}"></div>
+      </div>
+      <div class="compscore" style="color:${cColors[c.score]}">${c.score}</div>
+    </div>`).join('');
+
+  // ---- Radar chart ----
+  if (chartInst) chartInst.destroy();
+  const ctx = document.getElementById('pc').getContext('2d');
+  chartInst = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['C1\n\u4e3b\u89c0\u54c1\u8cea', 'C2\n\u5165\u7761\u6642\u9593', 'C3\n\u7761\u7720\u6642\u6578', 'C4\n\u7761\u7720\u6548\u7387', 'C5\n\u7761\u7720\u56f0\u64fe', 'C6\n\u85e5\u7269\u4f7f\u7528', 'C7\n\u65e5\u9593\u529f\u80fd'],
+      datasets: [{
+        label: '\u60a8\u7684\u5206\u6578',
+        data: [c1, c2, c3, c4, c5, c6, c7],
+        backgroundColor: 'rgba(66,153,225,0.18)',
+        borderColor: '#4299e1',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#4299e1',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      animation: false,
+      scales: {
+        r: {
+          min: 0, max: 3,
+          ticks: { stepSize: 1, font: { size: 10 }, color: '#a0aec0', backdropColor: 'transparent' },
+          pointLabels: { font: { size: 11 }, color: '#4a5568' },
+          grid: { color: '#e2e8f0' },
+          angleLines: { color: '#e2e8f0' }
+        }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  document.getElementById('res').style.display = 'block';
+  document.getElementById('res').scrollIntoView();
+}
+
+function rst() {
+  document.getElementById('mf').reset();
+  document.querySelectorAll('.ropt').forEach(el => el.classList.remove('sel'));
+  document.getElementById('errmsg').style.display = 'none';
+  document.getElementById('res').style.display = 'none';
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+  window.scrollTo({ top: 0 });
+}
+</script>
+</body>
+</html>
