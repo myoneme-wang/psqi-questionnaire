@@ -119,6 +119,8 @@
       .ropts{flex-direction:column;width:100%}
       .ropt{justify-content:flex-start}
     }
+    /* === BASIC INFO ROW (gender radio reuses .ropt) === */
+    .binfo-gender .ropts{margin-top:4px}
   </style>
 </head>
 <body>
@@ -143,6 +145,72 @@
   </div>
 
   <form id="mf">
+
+    <!-- ===== SECTION 0: 基本資料 ===== -->
+    <div class="sec">
+      <div class="sechd">
+        <div class="secico" style="background:#f0f4ff">👤</div>
+        <div class="secinfo">
+          <h3>基本資料</h3>
+          <p>Basic Information</p>
+        </div>
+      </div>
+
+      <div class="qrow">
+        <div class="qlabel">
+          <div class="qzh">姓名 <span style="color:#e53e3e">*</span></div>
+          <div class="qen">Name (required)</div>
+        </div>
+        <input type="text" id="bname" class="qinput" placeholder="請輸入姓名" style="width:180px">
+      </div>
+
+      <div class="qrow">
+        <div class="qlabel">
+          <div class="qzh">年齡</div>
+          <div class="qen">Age</div>
+        </div>
+        <input type="number" id="bage" class="qinput" min="1" max="120" placeholder="例：35" style="width:90px">
+        <span class="qunit">歲 / years</span>
+      </div>
+
+      <div class="qrow binfo-gender">
+        <div class="qlabel">
+          <div class="qzh">性別 <span style="color:#e53e3e">*</span></div>
+          <div class="qen">Gender (required)</div>
+        </div>
+        <div class="ropts" id="ropts_bgender">
+          <label class="ropt"><input type="radio" name="bgender" value="男" onchange="selRopt('bgender')">男<br><small>Male</small></label>
+          <label class="ropt"><input type="radio" name="bgender" value="女" onchange="selRopt('bgender')">女<br><small>Female</small></label>
+          <label class="ropt"><input type="radio" name="bgender" value="其他" onchange="selRopt('bgender')">其他<br><small>Other</small></label>
+        </div>
+      </div>
+
+      <div class="qrow">
+        <div class="qlabel">
+          <div class="qzh">身高</div>
+          <div class="qen">Height</div>
+        </div>
+        <input type="number" id="bheight" class="qinput" min="100" max="250" placeholder="例：165" style="width:90px">
+        <span class="qunit">公分 / cm</span>
+      </div>
+
+      <div class="qrow">
+        <div class="qlabel">
+          <div class="qzh">體重</div>
+          <div class="qen">Weight</div>
+        </div>
+        <input type="number" id="bweight" class="qinput" min="20" max="300" step="0.1" placeholder="例：60" style="width:90px">
+        <span class="qunit">公斤 / kg</span>
+      </div>
+
+      <div class="qrow">
+        <div class="qlabel">
+          <div class="qzh">填表日期</div>
+          <div class="qen">Date</div>
+        </div>
+        <input type="date" id="bdate" class="qinput" style="width:165px">
+      </div>
+    </div>
 
     <!-- ===== SECTION A: Q1–Q4 基本睡眠資訊 ===== -->
     <div class="sec">
@@ -364,8 +432,8 @@
         🌙 計算睡眠品質分數 &nbsp;|&nbsp; Calculate My Sleep Score
       </button>
       <div class="errmsg" id="errmsg">
-        ⚠️ 請完整填寫所有題目（包含所有子題）後再計算。<br>
-        <span style="font-size:.78rem">Please complete all questions before calculating.</span>
+        ⚠️ 請填寫姓名、選擇性別，並完整填寫所有睡眠題目（含所有子題）後再計算。<br>
+        <span style="font-size:.78rem">Please enter your name, select gender, and complete all sleep questions before calculating.</span>
       </div>
     </div>
   </form>
@@ -428,12 +496,27 @@
 //  PSQI Scoring Engine
 // ===================================================
 
+// Google Apps Script Web App URL — replace after deployment
+const SHEET_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+
+// Auto-fill today's date on load
+document.addEventListener('DOMContentLoaded', function() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('bdate').value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+});
+
 function getRadio(name) {
   const el = document.querySelector('input[name="' + name + '"]:checked');
   return el ? parseInt(el.value) : null;
 }
 
 function validate() {
+  // Basic info: name and gender required
+  const bname = document.getElementById('bname').value.trim();
+  if (!bname) return false;
+  if (!document.querySelector('input[name="bgender"]:checked')) return false;
+
   const q1 = document.getElementById('q1').value;
   const q2 = document.getElementById('q2').value;
   const q3 = document.getElementById('q3').value;
@@ -444,6 +527,11 @@ function validate() {
     if (getRadio(n) === null) return false;
   }
   return true;}
+
+function getGenderRadio() {
+  const el = document.querySelector('input[name="bgender"]:checked');
+  return el ? el.value : '';
+}
 
 function selRopt(qname) {
   const container = document.getElementById('ropts_' + qname);
@@ -601,6 +689,33 @@ function calc() {
       plugins: { legend: { display: false } }
     }
   });
+
+  // ---- Send to Google Sheets ----
+  if (SHEET_URL && SHEET_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+    const payload = {
+      name:    document.getElementById('bname').value.trim(),
+      age:     document.getElementById('bage').value,
+      gender:  getGenderRadio(),
+      height:  document.getElementById('bheight').value,
+      weight:  document.getElementById('bweight').value,
+      date:    document.getElementById('bdate').value,
+      total:   total,
+      c1: c1, c2: c2, c3: c3, c4: c4, c5: c5, c6: c6, c7: c7,
+      eff_pct: Math.round(eff),
+      tib_hrs: tib.toFixed(2),
+      q1: q1val, q2: q2val, q3: q3val, q4: q4val,
+      q5a: q5a, q5b: q5b, q5c: q5c, q5d: q5d, q5e: q5e,
+      q5f: q5f, q5g: q5g, q5h: q5h, q5i: q5i, q5j: q5j,
+      q5j_txt: document.getElementById('q5j_txt').value,
+      q6: q6, q7: q7, q8: q8, q9: q9
+    };
+    fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(function() {});
+  }
 
   document.getElementById('res').style.display = 'block';
   document.getElementById('res').scrollIntoView();
